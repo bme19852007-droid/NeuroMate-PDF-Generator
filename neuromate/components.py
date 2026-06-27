@@ -9,7 +9,7 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import ParagraphStyle
 
 from neuromate.config import BLUE, SILVER, WHITE
-from neuromate.pdf_engine import fix_text
+from neuromate.utils import fix_text
 
 
 # =========================================================
