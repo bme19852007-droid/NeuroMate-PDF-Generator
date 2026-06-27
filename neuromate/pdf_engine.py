@@ -1,116 +1,70 @@
 # =========================================================
-# NeuroMate PDF Engine
-# Core PDF Generator
+# NeuroMate PDF Engine - FINAL INTEGRATION CORE
 # =========================================================
 
 import os
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT
-from reportlab.lib import colors
-
-import arabic_reshaper
-from bidi.algorithm import get_display
+from reportlab.platypus import SimpleDocTemplate, Spacer, PageBreak
+from reportlab.platypus import Paragraph
 
 from neuromate.config import (
     PAGE_SIZE,
     LEFT_MARGIN,
     RIGHT_MARGIN,
     TOP_MARGIN,
-    BOTTOM_MARGIN,
-    FONT_REGULAR,
-    FONT_BOLD,
-    BLACK,
-    WHITE,
-    BLUE,
-    SILVER
+    BOTTOM_MARGIN
 )
 
+from neuromate.styles import NeuroMateStyles
+from neuromate.components import NeuroMateComponents
+
 # =========================================================
-# TEXT PROCESSING (Arabic Fix)
+# TEXT FIX (Arabic Support)
 # =========================================================
+
+import arabic_reshaper
+from bidi.algorithm import get_display
+
 
 def fix_text(text: str) -> str:
     """
-    Fix Arabic text direction for ReportLab
+    Fix Arabic RTL rendering for ReportLab
     """
     if not text:
         return ""
 
     reshaped = arabic_reshaper.reshape(text)
-    bidi_text = get_display(reshaped)
-    return bidi_text
+    return get_display(reshaped)
 
 
 # =========================================================
-# MAIN ENGINE CLASS
+# ENGINE CLASS
 # =========================================================
 
 class NeuroMatePDF:
 
     def __init__(self, output_path="output"):
+
         self.output_path = output_path
+        self.file_path = None
         self.story = []
 
-        self.file_path = None
+        # Style system
+        self.styles = NeuroMateStyles()
 
-        # Styles
-        self.styles = getSampleStyleSheet()
+        # Components system
+        self.components = NeuroMateComponents(self.styles)
 
-        self.title_style = ParagraphStyle(
-            "TitleStyle",
-            parent=self.styles["Heading1"],
-            fontSize=28,
-            alignment=TA_CENTER,
-            textColor=BLUE,
-            spaceAfter=20
-        )
+        self.doc = None
 
-        self.subtitle_style = ParagraphStyle(
-            "SubtitleStyle",
-            parent=self.styles["Normal"],
-            fontSize=14,
-            alignment=TA_CENTER,
-            textColor=SILVER,
-            spaceAfter=30
-        )
-
-        self.section_title_style = ParagraphStyle(
-            "SectionTitle",
-            parent=self.styles["Heading2"],
-            fontSize=18,
-            alignment=TA_RIGHT,
-            textColor=BLUE,
-            spaceAfter=10
-        )
-
-        self.body_style = ParagraphStyle(
-            "BodyStyle",
-            parent=self.styles["Normal"],
-            fontSize=11,
-            alignment=TA_RIGHT,
-            textColor=WHITE,
-            leading=18
-        )
-
-        self.quote_style = ParagraphStyle(
-            "QuoteStyle",
-            parent=self.styles["Normal"],
-            fontSize=12,
-            alignment=TA_CENTER,
-            textColor=SILVER,
-            italic=True,
-            spaceAfter=20
-        )
-
-    # =====================================================
-    # DOCUMENT INIT
-    # =====================================================
+    # -----------------------------------------------------
+    # INIT DOCUMENT
+    # -----------------------------------------------------
 
     def create_document(self):
-        """
-        Initialize PDF document
-        """
+
+        if not os.path.exists(self.output_path):
+            os.makedirs(self.output_path)
+
         self.file_path = os.path.join(self.output_path, "temp.pdf")
 
         self.doc = SimpleDocTemplate(
@@ -122,72 +76,56 @@ class NeuroMatePDF:
             bottomMargin=BOTTOM_MARGIN
         )
 
-    # =====================================================
-    # COVER PAGE
-    # =====================================================
+    # -----------------------------------------------------
+    # COVER
+    # -----------------------------------------------------
 
     def add_cover(self, title, subtitle="", description=""):
 
-        self.story.append(Spacer(1, 120))
-
-        self.story.append(
-            Paragraph(fix_text(title), self.title_style)
+        block = self.components.cover_block(
+            title, subtitle, description
         )
 
-        if subtitle:
-            self.story.append(
-                Paragraph(fix_text(subtitle), self.subtitle_style)
-            )
-
-        if description:
-            self.story.append(
-                Paragraph(fix_text(description), self.body_style)
-            )
-
+        self.story.extend(block)
         self.story.append(PageBreak())
 
-    # =====================================================
-    # QUOTE PAGE
-    # =====================================================
+    # -----------------------------------------------------
+    # QUOTE
+    # -----------------------------------------------------
 
     def add_quote(self, text):
 
-        self.story.append(Spacer(1, 200))
+        block = self.components.quote_block(text)
 
-        self.story.append(
-            Paragraph(f"“{fix_text(text)}”", self.quote_style)
-        )
-
+        self.story.extend(block)
         self.story.append(PageBreak())
 
-    # =====================================================
-    # SECTION PAGE
-    # =====================================================
+    # -----------------------------------------------------
+    # SECTION
+    # -----------------------------------------------------
 
     def add_section(self, title, content):
 
-        self.story.append(
-            Paragraph(fix_text(title), self.section_title_style)
-        )
+        block = self.components.section_block(title, content)
 
-        self.story.append(Spacer(1, 10))
-
-        paragraphs = content.strip().split("\n")
-
-        for p in paragraphs:
-            if p.strip():
-                self.story.append(
-                    Paragraph(fix_text(p.strip()), self.body_style)
-                )
-                self.story.append(Spacer(1, 10))
-
+        self.story.extend(block)
         self.story.append(PageBreak())
 
-    # =====================================================
-    # SAVE PDF
-    # =====================================================
+    # -----------------------------------------------------
+    # INFO BOX
+    # -----------------------------------------------------
 
-    def save(self, filename="output.pdf"):
+    def add_info_box(self, title, content):
+
+        block = self.components.info_box(title, content)
+
+        self.story.extend(block)
+
+    # -----------------------------------------------------
+    # SAVE PDF
+    # -----------------------------------------------------
+
+    def save(self, filename="NeuroMate.pdf"):
 
         output_file = os.path.join(self.output_path, filename)
 
