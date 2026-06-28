@@ -1,5 +1,6 @@
 # =========================================================
-# NeuroMate PDF Engine V3
+# NeuroMate PDF Engine V2
+# Core Engine
 # =========================================================
 
 import os
@@ -7,8 +8,9 @@ import os
 import arabic_reshaper
 from bidi.algorithm import get_display
 
-from reportlab.platypus import SimpleDocTemplate
 from reportlab.lib.colors import HexColor
+from reportlab.lib.utils import ImageReader
+from reportlab.platypus import SimpleDocTemplate
 
 from neuromate.config import (
     PAGE_SIZE,
@@ -29,12 +31,12 @@ from neuromate.layouts import NeuroMateLayouts
 
 
 # =========================================================
-# Arabic Text Support
+# Arabic Support
 # =========================================================
 
 def fix_text(text):
 
-    if not text:
+    if text is None:
         return ""
 
     try:
@@ -54,28 +56,29 @@ class NeuroMatePDF:
 
         self.output_path = output_path
 
-        os.makedirs(self.output_path, exist_ok=True)
+        os.makedirs(
+            self.output_path,
+            exist_ok=True
+        )
 
-        self.file_path = None
-        self.doc = None
-
-        self.story = []
-
-        # Styles
+        # Register Fonts
+        self.fonts = FontManager()
+        self.fonts.register()
 
         self.styles = NeuroMateStyles()
-
-        # Components
 
         self.components = NeuroMateComponents(
             self.styles
         )
 
-        # Layout System
-
         self.layouts = NeuroMateLayouts(
             self.components
         )
+
+        self.story = []
+
+        self.doc = None
+        self.file_path = None
 
     # =====================================================
     # CREATE DOCUMENT
@@ -95,9 +98,9 @@ class NeuroMatePDF:
             rightMargin=RIGHT_MARGIN,
             topMargin=TOP_MARGIN,
             bottomMargin=BOTTOM_MARGIN,
-        )    
-    # =====================================================
-    # COVER PAGE
+        )
+            # =====================================================
+    # ADD COVER
     # =====================================================
 
     def add_cover(
@@ -108,17 +111,15 @@ class NeuroMatePDF:
     ):
 
         self.story.extend(
-
             self.layouts.cover(
                 title,
                 subtitle,
                 description
             )
-
         )
 
     # =====================================================
-    # QUOTE PAGE
+    # ADD QUOTE
     # =====================================================
 
     def add_quote(
@@ -127,15 +128,13 @@ class NeuroMatePDF:
     ):
 
         self.story.extend(
-
             self.layouts.quote(
                 text
             )
-
         )
 
     # =====================================================
-    # SECTION PAGE
+    # ADD SECTION
     # =====================================================
 
     def add_section(
@@ -145,16 +144,14 @@ class NeuroMatePDF:
     ):
 
         self.story.extend(
-
             self.layouts.section(
                 title,
                 content
             )
-
         )
 
     # =====================================================
-    # INFO BOX
+    # ADD INFO BOX
     # =====================================================
 
     def add_info_box(
@@ -164,72 +161,46 @@ class NeuroMatePDF:
     ):
 
         self.story.extend(
-
             self.layouts.info(
                 title,
                 content
             )
-
         )
 
     # =====================================================
-    # PAGE TEMPLATE
+    # HELPERS
     # =====================================================
 
-    def draw_page(
-        self,
-        canvas,
-        doc
-    ):
-# =====================================================
-# COVER PAGE
-# =====================================================
+    def logo_path(self):
 
-def draw_cover(self, canvas, doc):
-
-    from reportlab.lib.utils import ImageReader
-
-    width, height = PAGE_SIZE
-
-    canvas.saveState()
-
-    bg = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "assets",
-        "images",
-        "cover_bg.jpg"
-    )
-
-    if os.path.exists(bg):
-
-        canvas.drawImage(
-            ImageReader(bg),
-            0,
-            0,
-            width=width,
-            height=height,
-            preserveAspectRatio=False,
-            mask="auto"
+        return os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            "assets",
+            "images",
+            "logo.png"
         )
 
-    canvas.restoreState()
+    def cover_path(self):
+
+        return os.path.join(
+            os.path.dirname(os.path.dirname(__file__)),
+            "assets",
+            "images",
+            "cover_bg.jpg"
+        )
+            # =====================================================
+    # DRAW STANDARD PAGE
+    # =====================================================
+
+    def draw_page(self, canvas, doc):
+
         width, height = PAGE_SIZE
 
         canvas.saveState()
-        # =====================================================
-# LOGO
-# =====================================================
 
-logo_path = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)),
-    "assets",
-    "images",
-    "logo.png"
-)
-
-logo_exists = os.path.exists(logo_path)
-
+        # -------------------------------------------------
         # Background
+        # -------------------------------------------------
 
         canvas.setFillColor(
             HexColor("#0D0F14")
@@ -244,67 +215,70 @@ logo_exists = os.path.exists(logo_path)
             stroke=0
         )
 
+        # -------------------------------------------------
+        # Logo
+        # -------------------------------------------------
+
+        logo = self.logo_path()
+
+        if os.path.exists(logo):
+
+            try:
+
+                canvas.drawImage(
+                    ImageReader(logo),
+                    LEFT_MARGIN,
+                    height - 48,
+                    width=28,
+                    height=28,
+                    mask="auto",
+                    preserveAspectRatio=True
+                )
+
+            except Exception:
+                pass
+
+        # -------------------------------------------------
         # Header
+        # -------------------------------------------------
 
-        # =====================================================
-# HEADER LOGO
-# =====================================================
-
-if logo_exists:
-
-    try:
-
-        canvas.drawImage(
-            logo_path,
-            LEFT_MARGIN,
-            height - 45,
-            width=90,
-            preserveAspectRatio=True,
-            mask="auto",
+        canvas.setFont(
+            FONT_BOLD,
+            12
         )
 
-        title_x = LEFT_MARGIN + 100
+        canvas.setFillColor(
+            BLUE
+        )
 
-    except Exception:
+        canvas.drawString(
+            LEFT_MARGIN + 38,
+            height - 30,
+            "NEUROMATE"
+        )
 
-        title_x = LEFT_MARGIN
-
-else:
-
-    title_x = LEFT_MARGIN
-
-
-canvas.setFont(
-    FONT_BOLD,
-    11
-)
-
-canvas.setFillColor(BLUE)
-
-canvas.drawString(
-    title_x,
-    height - 28,
-    "NEUROMATE"
-)
-
-        # Separator
+        # -------------------------------------------------
+        # Divider
+        # -------------------------------------------------
 
         canvas.setStrokeColor(
             SILVER
         )
 
         canvas.setLineWidth(
-            0.6
+            0.5
         )
 
         canvas.line(
             LEFT_MARGIN,
-            height - 36,
+            height - 38,
             width - RIGHT_MARGIN,
-            height - 36
+            height - 38
         )
 
+        # -------------------------------------------------
         # Footer
+        # -------------------------------------------------
 
         canvas.setFont(
             FONT_REGULAR,
@@ -317,12 +291,70 @@ canvas.drawString(
 
         canvas.drawRightString(
             width - RIGHT_MARGIN,
-            22,
+            20,
             f"Page {canvas.getPageNumber()}"
         )
 
         canvas.restoreState()
+
+
     # =====================================================
+    # DRAW COVER PAGE
+    # =====================================================
+
+    def draw_cover(self, canvas, doc):
+
+        width, height = PAGE_SIZE
+
+        canvas.saveState()
+
+        bg = self.cover_path()
+
+        if os.path.exists(bg):
+
+            try:
+
+                canvas.drawImage(
+                    ImageReader(bg),
+                    0,
+                    0,
+                    width=width,
+                    height=height,
+                    preserveAspectRatio=False,
+                    mask="auto"
+                )
+
+            except Exception:
+                canvas.setFillColor(
+                    HexColor("#05070A")
+                )
+
+                canvas.rect(
+                    0,
+                    0,
+                    width,
+                    height,
+                    fill=1,
+                    stroke=0
+                )
+
+        else:
+
+            canvas.setFillColor(
+                HexColor("#05070A")
+            )
+
+            canvas.rect(
+                0,
+                0,
+                width,
+                height,
+                fill=1,
+                stroke=0
+            )
+
+        canvas.restoreState()
+            # =====================================================
     # SAVE PDF
     # =====================================================
 
@@ -336,11 +368,11 @@ canvas.drawString(
             filename
         )
 
-       self.doc.build(
-    self.story,
-    onFirstPage=self.draw_cover,
-    onLaterPages=self.draw_page,
-)
+        self.doc.build(
+            self.story,
+            onFirstPage=self.draw_cover,
+            onLaterPages=self.draw_page,
+        )
 
         if os.path.exists(output_file):
             os.remove(output_file)

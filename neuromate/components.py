@@ -3,12 +3,21 @@
 # Cinematic Layout Blocks
 # =========================================================
 
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
-from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import (
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
-from neuromate.config import BLUE, SILVER, WHITE
+from reportlab.lib import colors
+
+from neuromate.config import (
+    BLUE,
+    SILVER,
+    WHITE,
+)
+
 from neuromate.utils import fix_text
 
 
@@ -22,9 +31,15 @@ class NeuroMateComponents:
         self.styles = styles
 
     # -----------------------------------------------------
-    # COVER BLOCK (Reusable)
+    # COVER BLOCK (Cinematic Cover)
     # -----------------------------------------------------
-    def cover_block(self, title, subtitle="", description=""):
+
+    def cover_block(
+        self,
+        title,
+        subtitle="",
+        description=""
+    ):
 
         elements = []
 
@@ -32,70 +47,174 @@ class NeuroMateComponents:
         subtitle_style = self.styles.subtitle()
         body_style = self.styles.body()
 
-        elements.append(Spacer(1, 120))
+        # Space from top
+        elements.append(Spacer(1, 220))
 
+        # Main Title
         elements.append(
-            Paragraph(fix_text(title), title_style)
+            Paragraph(
+                f"<font size='34'><b>{fix_text(title)}</b></font>",
+                title_style,
+            )
         )
 
+        elements.append(Spacer(1, 18))
+
+        # Subtitle
         if subtitle:
+
             elements.append(
-                Paragraph(fix_text(subtitle), subtitle_style)
+                Paragraph(
+                    f"<font size='18'>{fix_text(subtitle)}</font>",
+                    subtitle_style,
+                )
             )
 
+        elements.append(Spacer(1, 28))
+
+        # Description
         if description:
+
             elements.append(
-                Paragraph(fix_text(description), body_style)
+                Paragraph(
+                    fix_text(description),
+                    body_style,
+                )
             )
 
-        elements.append(Spacer(1, 30))
+        elements.append(Spacer(1, 220))
 
         return elements
 
     # -----------------------------------------------------
-    # QUOTE BLOCK (Cinematic Quote)
+    # QUOTE BLOCK
     # -----------------------------------------------------
+
     def quote_block(self, text):
 
         quote_style = self.styles.quote()
 
         return [
+
             Spacer(1, 180),
-            Paragraph(f"“{fix_text(text)}”", quote_style),
-            Spacer(1, 30)
+
+            Paragraph(
+                f"“{fix_text(text)}”",
+                quote_style
+            ),
+
+            Spacer(1, 40),
+
         ]
 
     # -----------------------------------------------------
-    # INFO BOX (Tech Noir Card)
+    # INFO BOX
     # -----------------------------------------------------
-    def info_box(self, title, content):
+
+    def info_box(
+        self,
+        title,
+        content
+    ):
 
         title_style = self.styles.section_title()
         body_style = self.styles.body()
 
         table_data = [
-            [Paragraph(fix_text(title), title_style)],
-            [Spacer(1, 5)],
-            [Paragraph(fix_text(content), body_style)]
+
+            [
+                Paragraph(
+                    fix_text(title),
+                    title_style
+                )
+            ],
+
+            [Spacer(1, 6)],
+
+            [
+                Paragraph(
+                    fix_text(content),
+                    body_style
+                )
+            ],
+
         ]
 
-        table = Table(table_data, colWidths=450)
+        table = Table(
+            table_data,
+            colWidths=450
+        )
 
-        table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#0A0A0A")),
-            ("BOX", (0, 0), (-1, -1), 1, SILVER),
-            ("LEFTPADDING", (0, 0), (-1, -1), 12),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-            ("TOPPADDING", (0, 0), (-1, -1), 10),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-        ]))
+        table.setStyle(
 
-        return [Spacer(1, 15), table, Spacer(1, 15)]
+            TableStyle([
+
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, -1),
+                    colors.HexColor("#0B0F18"),
+                ),
+
+                (
+                    "BOX",
+                    (0, 0),
+                    (-1, -1),
+                    1,
+                    SILVER,
+                ),
+
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    16,
+                ),
+
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    16,
+                ),
+
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    12,
+                ),
+
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    12,
+                ),
+
+            ])
+
+        )
+
+        return [
+
+            Spacer(1, 20),
+
+            table,
+
+            Spacer(1, 20),
+
+        ]
 
     # -----------------------------------------------------
-    # SECTION BLOCK
+    # STANDARD SECTION
     # -----------------------------------------------------
-    def section_block(self, title, content):
+
+    def section_block(
+        self,
+        title,
+        content
+    ):
 
         elements = []
 
@@ -103,18 +222,40 @@ class NeuroMateComponents:
         body_style = self.styles.body()
 
         elements.append(
-            Paragraph(fix_text(title), title_style)
+
+            Paragraph(
+                fix_text(title),
+                title_style
+            )
+
         )
 
-        elements.append(Spacer(1, 10))
+        elements.append(
+            Spacer(1, 12)
+        )
 
         for line in content.split("\n"):
-            if line.strip():
-                elements.append(
-                    Paragraph(fix_text(line), body_style)
-                )
-                elements.append(Spacer(1, 8))
 
-        elements.append(Spacer(1, 20))
+            line = line.strip()
+
+            if not line:
+                continue
+
+            elements.append(
+
+                Paragraph(
+                    fix_text(line),
+                    body_style
+                )
+
+            )
+
+            elements.append(
+                Spacer(1, 8)
+            )
+
+        elements.append(
+            Spacer(1, 20)
+        )
 
         return elements
