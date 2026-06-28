@@ -181,7 +181,38 @@ class NeuroMatePDF:
         canvas,
         doc
     ):
+# =====================================================
+# COVER PAGE
+# =====================================================
 
+def draw_cover(self, canvas, doc):
+
+    from reportlab.lib.utils import ImageReader
+
+    width, height = PAGE_SIZE
+
+    canvas.saveState()
+
+    bg = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "assets",
+        "images",
+        "cover_bg.jpg"
+    )
+
+    if os.path.exists(bg):
+
+        canvas.drawImage(
+            ImageReader(bg),
+            0,
+            0,
+            width=width,
+            height=height,
+            preserveAspectRatio=False,
+            mask="auto"
+        )
+
+    canvas.restoreState()
         width, height = PAGE_SIZE
 
         canvas.saveState()
@@ -305,11 +336,11 @@ canvas.drawString(
             filename
         )
 
-        self.doc.build(
-            self.story,
-            onFirstPage=self.draw_page,
-            onLaterPages=self.draw_page,
-        )
+       self.doc.build(
+    self.story,
+    onFirstPage=self.draw_cover,
+    onLaterPages=self.draw_page,
+)
 
         if os.path.exists(output_file):
             os.remove(output_file)
