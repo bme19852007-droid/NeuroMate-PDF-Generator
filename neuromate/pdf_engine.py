@@ -185,6 +185,18 @@ class NeuroMatePDF:
         width, height = PAGE_SIZE
 
         canvas.saveState()
+        # =====================================================
+# LOGO
+# =====================================================
+
+logo_path = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)),
+    "assets",
+    "images",
+    "logo.png"
+)
+
+logo_exists = os.path.exists(logo_path)
 
         # Background
 
@@ -203,20 +215,46 @@ class NeuroMatePDF:
 
         # Header
 
-        canvas.setFont(
-            FONT_BOLD,
-            11
-        )
+        # =====================================================
+# HEADER LOGO
+# =====================================================
 
-        canvas.setFillColor(
-            BLUE
-        )
+if logo_exists:
 
-        canvas.drawString(
+    try:
+
+        canvas.drawImage(
+            logo_path,
             LEFT_MARGIN,
-            height - 28,
-            "NEUROMATE"
+            height - 45,
+            width=90,
+            preserveAspectRatio=True,
+            mask="auto",
         )
+
+        title_x = LEFT_MARGIN + 100
+
+    except Exception:
+
+        title_x = LEFT_MARGIN
+
+else:
+
+    title_x = LEFT_MARGIN
+
+
+canvas.setFont(
+    FONT_BOLD,
+    11
+)
+
+canvas.setFillColor(BLUE)
+
+canvas.drawString(
+    title_x,
+    height - 28,
+    "NEUROMATE"
+)
 
         # Separator
 
