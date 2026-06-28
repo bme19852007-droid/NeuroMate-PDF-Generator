@@ -1,11 +1,9 @@
 # =========================================================
-# NeuroMate Styles System
-# Visual Identity (Cinematic Design)
+# NeuroMate Style System
 # =========================================================
 
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
-from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 from neuromate.config import (
     FONT_REGULAR,
@@ -14,108 +12,114 @@ from neuromate.config import (
     BLUE,
     WHITE,
     SILVER,
-    GOLD
+    GOLD,
 )
 
-# =========================================================
-# STYLE FACTORY CLASS
-# =========================================================
 
 class NeuroMateStyles:
 
     def __init__(self):
         self.styles = getSampleStyleSheet()
 
-    # -----------------------------------------------------
-    # TITLE STYLE (Cinematic Cover)
-    # -----------------------------------------------------
+    # -------------------------------------------------
+    # Main Title
+    # -------------------------------------------------
+
     def title(self):
 
         return ParagraphStyle(
-            "NM_Title",
+            "Title",
             parent=self.styles["Heading1"],
             fontName=FONT_BOLD,
-            fontSize=34,
+            fontSize=30,
+            leading=36,
             alignment=TA_CENTER,
             textColor=BLUE,
-            spaceAfter=20
+            spaceAfter=18,
         )
 
-    # -----------------------------------------------------
-    # SUBTITLE STYLE
-    # -----------------------------------------------------
+    # -------------------------------------------------
+    # Subtitle
+    # -------------------------------------------------
+
     def subtitle(self):
 
         return ParagraphStyle(
-            "NM_Subtitle",
-            parent=self.styles["Normal"],
-            fontName=FONT_REGULAR,
-            fontSize=14,
-            alignment=TA_CENTER,
-            textColor=SILVER,
-            spaceAfter=25
-        )
-
-    # -----------------------------------------------------
-    # SECTION TITLE (Tech Noir Header)
-    # -----------------------------------------------------
-    def section_title(self):
-
-        return ParagraphStyle(
-            "NM_SectionTitle",
+            "Subtitle",
             parent=self.styles["Heading2"],
-            fontName=FONT_BOLD,
-            fontSize=18,
-            alignment=TA_RIGHT,
-            textColor=BLUE,
-            spaceBefore=20,
-            spaceAfter=10
-        )
-
-    # -----------------------------------------------------
-    # BODY TEXT
-    # -----------------------------------------------------
-    def body(self):
-
-        return ParagraphStyle(
-            "NM_Body",
-            parent=self.styles["Normal"],
-            fontName=FONT_REGULAR,
-            fontSize=11,
-            leading=18,
-            alignment=TA_RIGHT,
-            textColor=WHITE
-        )
-
-    # -----------------------------------------------------
-    # QUOTE STYLE (Cinematic Impact)
-    # -----------------------------------------------------
-    def quote(self):
-
-        return ParagraphStyle(
-            "NM_Quote",
-            parent=self.styles["Normal"],
             fontName=FONT_SEMIBOLD,
-            fontSize=13,
+            fontSize=16,
             leading=22,
             alignment=TA_CENTER,
             textColor=SILVER,
-            italic=True,
-            spaceBefore=30,
-            spaceAfter=30
+            spaceAfter=12,
         )
 
-    # -----------------------------------------------------
-    # GOLD STYLE (Jallen Hask Special Identity)
-    # -----------------------------------------------------
-    def gold_title(self):
+    # -------------------------------------------------
+    # Section Title
+    # -------------------------------------------------
+
+    def section_title(self):
 
         return ParagraphStyle(
-            "NM_Gold",
+            "SectionTitle",
             parent=self.styles["Heading2"],
             fontName=FONT_BOLD,
-            fontSize=18,
+            fontSize=20,
+            leading=28,
+            alignment=TA_RIGHT,
+            textColor=BLUE,
+            spaceAfter=12,
+        )
+
+    # -------------------------------------------------
+    # Body
+    # -------------------------------------------------
+
+    def body(self):
+
+        return ParagraphStyle(
+            "Body",
+            parent=self.styles["BodyText"],
+            fontName=FONT_REGULAR,
+            fontSize=12,
+            leading=24,
+            alignment=TA_RIGHT,
+            textColor=WHITE,
+            spaceAfter=8,
+        )
+
+    # -------------------------------------------------
+    # Quote
+    # -------------------------------------------------
+
+    def quote(self):
+
+        return ParagraphStyle(
+            "Quote",
+            parent=self.styles["BodyText"],
+            fontName=FONT_SEMIBOLD,
+            fontSize=15,
+            leading=26,
+            alignment=TA_CENTER,
+            textColor=SILVER,
+            italic=True,
+            spaceAfter=20,
+        )
+
+    # -------------------------------------------------
+    # Highlight
+    # -------------------------------------------------
+
+    def highlight(self):
+
+        return ParagraphStyle(
+            "Highlight",
+            parent=self.styles["BodyText"],
+            fontName=FONT_BOLD,
+            fontSize=14,
+            leading=22,
             alignment=TA_RIGHT,
             textColor=GOLD,
-            spaceAfter=10
+            spaceAfter=10,
         )
