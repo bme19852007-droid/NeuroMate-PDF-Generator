@@ -1,37 +1,50 @@
 # =========================================================
-# NeuroMate PDF Engine - CLEAN VERSION
+# NeuroMate PDF Engine V3
 # =========================================================
 
 import os
-from reportlab.platypus import SimpleDocTemplate, Spacer, PageBreak
+
+import arabic_reshaper
+from bidi.algorithm import get_display
+
+from reportlab.platypus import SimpleDocTemplate
+from reportlab.lib.colors import HexColor
 
 from neuromate.config import (
     PAGE_SIZE,
     LEFT_MARGIN,
     RIGHT_MARGIN,
     TOP_MARGIN,
-    BOTTOM_MARGIN
+    BOTTOM_MARGIN,
+    FONT_REGULAR,
+    FONT_BOLD,
+    BLUE,
+    SILVER,
 )
 
 from neuromate.styles import NeuroMateStyles
 from neuromate.components import NeuroMateComponents
-
-import arabic_reshaper
-from bidi.algorithm import get_display
+from neuromate.layouts import NeuroMateLayouts
 
 
 # =========================================================
-# TEXT FIX
+# Arabic Text Support
 # =========================================================
 
-def fix_text(text: str) -> str:
+def fix_text(text):
+
     if not text:
         return ""
-    return get_display(arabic_reshaper.reshape(text))
+
+    try:
+        reshaped = arabic_reshaper.reshape(str(text))
+        return get_display(reshaped)
+    except Exception:
+        return str(text)
 
 
 # =========================================================
-# ENGINE
+# PDF ENGINE
 # =========================================================
 
 class NeuroMatePDF:
@@ -39,82 +52,232 @@ class NeuroMatePDF:
     def __init__(self, output_path="output"):
 
         self.output_path = output_path
+
+        os.makedirs(self.output_path, exist_ok=True)
+
         self.file_path = None
-        self.story = []
-
-        self.styles = NeuroMateStyles()
-        self.components = NeuroMateComponents(self.styles)
-
         self.doc = None
 
-    # -----------------------------------------------------
-    # INIT DOCUMENT
-    # -----------------------------------------------------
+        self.story = []
+
+        # Styles
+
+        self.styles = NeuroMateStyles()
+
+        # Components
+
+        self.components = NeuroMateComponents(
+            self.styles
+        )
+
+        # Layout System
+
+        self.layouts = NeuroMateLayouts(
+            self.components
+        )
+
+    # =====================================================
+    # CREATE DOCUMENT
+    # =====================================================
 
     def create_document(self):
 
-        if not os.path.exists(self.output_path):
-            os.makedirs(self.output_path)
-
-        self.file_path = os.path.join(self.output_path, "temp.pdf")
+        self.file_path = os.path.join(
+            self.output_path,
+            "temp.pdf"
+        )
 
         self.doc = SimpleDocTemplate(
             self.file_path,
             pagesize=PAGE_SIZE,
-            rightMargin=RIGHT_MARGIN,
             leftMargin=LEFT_MARGIN,
+            rightMargin=RIGHT_MARGIN,
             topMargin=TOP_MARGIN,
-            bottomMargin=BOTTOM_MARGIN
+            bottomMargin=BOTTOM_MARGIN,
+        )    
+    # =====================================================
+    # COVER PAGE
+    # =====================================================
+
+    def add_cover(
+        self,
+        title,
+        subtitle="",
+        description=""
+    ):
+
+        self.story.extend(
+
+            self.layouts.cover(
+                title,
+                subtitle,
+                description
+            )
+
         )
 
-    # -----------------------------------------------------
-    # COVER
-    # -----------------------------------------------------
+    # =====================================================
+    # QUOTE PAGE
+    # =====================================================
 
-    def add_cover(self, title, subtitle="", description=""):
+    def add_quote(
+        self,
+        text
+    ):
 
-        block = self.components.cover_block(title, subtitle, description)
-        self.story.extend(block)
-        self.story.append(PageBreak())
+        self.story.extend(
 
-    # -----------------------------------------------------
-    # QUOTE
-    # -----------------------------------------------------
+            self.layouts.quote(
+                text
+            )
 
-    def add_quote(self, text):
+        )
 
-        block = self.components.quote_block(text)
-        self.story.extend(block)
-        self.story.append(PageBreak())
+    # =====================================================
+    # SECTION PAGE
+    # =====================================================
 
-    # -----------------------------------------------------
-    # SECTION
-    # -----------------------------------------------------
+    def add_section(
+        self,
+        title,
+        content
+    ):
 
-    def add_section(self, title, content):
+        self.story.extend(
 
-        block = self.components.section_block(title, content)
-        self.story.extend(block)
-        self.story.append(PageBreak())
+            self.layouts.section(
+                title,
+                content
+            )
 
-    # -----------------------------------------------------
+        )
+
+    # =====================================================
     # INFO BOX
-    # -----------------------------------------------------
+    # =====================================================
 
-    def add_info_box(self, title, content):
+    def add_info_box(
+        self,
+        title,
+        content
+    ):
 
-        block = self.components.info_box(title, content)
-        self.story.extend(block)
+        self.story.extend(
 
-    # -----------------------------------------------------
-    # SAVE
-    # -----------------------------------------------------
+            self.layouts.info(
+                title,
+                content
+            )
+
+        )
+
+    # =====================================================
+    # PAGE TEMPLATE
+    # =====================================================
+
+    def draw_page(
+        self,
+        canvas,
+        doc
+    ):
+
+        width, height = PAGE_SIZE
+
+        canvas.saveState()
+
+        # Background
+
+        canvas.setFillColor(
+            HexColor("#0D0F14")
+        )
+
+        canvas.rect(
+            0,
+            0,
+            width,
+            height,
+            fill=1,
+            stroke=0
+        )
+
+        # Header
+
+        canvas.setFont(
+            FONT_BOLD,
+            11
+        )
+
+        canvas.setFillColor(
+            BLUE
+        )
+
+        canvas.drawString(
+            LEFT_MARGIN,
+            height - 28,
+            "NEUROMATE"
+        )
+
+        # Separator
+
+        canvas.setStrokeColor(
+            SILVER
+        )
+
+        canvas.setLineWidth(
+            0.6
+        )
+
+        canvas.line(
+            LEFT_MARGIN,
+            height - 36,
+            width - RIGHT_MARGIN,
+            height - 36
+        )
+
+        # Footer
+
+        canvas.setFont(
+            FONT_REGULAR,
+            9
+        )
+
+        canvas.setFillColor(
+            SILVER
+        )
+
+        canvas.drawRightString(
+            width - RIGHT_MARGIN,
+            22,
+            f"Page {canvas.getPageNumber()}"
+        )
+
+        canvas.restoreState()
+    # =====================================================
+    # SAVE PDF
+    # =====================================================
 
     def save(self, filename="NeuroMate.pdf"):
 
-        output_file = os.path.join(self.output_path, filename)
-        self.doc.build(self.story)
+        if self.doc is None:
+            self.create_document()
 
-        os.rename(self.file_path, output_file)
+        output_file = os.path.join(
+            self.output_path,
+            filename
+        )
+
+        self.doc.build(
+            self.story,
+            onFirstPage=self.draw_page,
+            onLaterPages=self.draw_page,
+        )
+
+        if os.path.exists(output_file):
+            os.remove(output_file)
+
+        os.replace(
+            self.file_path,
+            output_file
+        )
 
         return output_file
