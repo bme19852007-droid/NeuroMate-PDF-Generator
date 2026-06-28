@@ -23,6 +23,7 @@ from neuromate.config import (
 )
 
 from neuromate.styles import NeuroMateStyles
+from neuromate.font_manager import FontManager
 from neuromate.components import NeuroMateComponents
 from neuromate.layouts import NeuroMateLayouts
 
