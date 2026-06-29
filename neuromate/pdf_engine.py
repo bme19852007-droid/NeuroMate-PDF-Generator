@@ -191,159 +191,144 @@ class NeuroMatePDF:
             # =====================================================
     # DRAW STANDARD PAGE
     # =====================================================
+def draw_page(self, canvas, doc):
 
-    def draw_page(self, canvas, doc):
+    width, height = PAGE_SIZE
 
-        width, height = PAGE_SIZE
+    canvas.saveState()
 
-        canvas.saveState()
+    # =====================================================
+    # Background
+    # =====================================================
 
-        # -------------------------------------------------
-        # Background
-        # -------------------------------------------------
+    canvas.setFillColor(
+        HexColor("#0D0F14")
+    )
 
-        canvas.setFillColor(
-            HexColor("#0D0F14")
-        )
+    canvas.rect(
+        0,
+        0,
+        width,
+        height,
+        fill=1,
+        stroke=0
+    )
 
-        canvas.rect(
-            0,
-            0,
-            width,
-            height,
-            fill=1,
-            stroke=0
-        )
+    # =====================================================
+    # Small Logo
+    # =====================================================
 
-        # -------------------------------------------------
-        # Logo
-        # -------------------------------------------------
+    logo = self.logo_path()
 
-        logo = self.logo_path()
+    if os.path.exists(logo):
 
-        if os.path.exists(logo):
+        try:
 
-            try:
+            canvas.drawImage(
+                ImageReader(logo),
+                LEFT_MARGIN,
+                height - 42,
+                width=22,
+                height=22,
+                preserveAspectRatio=True,
+                mask="auto"
+            )
 
-                canvas.drawImage(
-                    ImageReader(logo),
-                    LEFT_MARGIN,
-                    height - 48,
-                    width=28,
-                    height=28,
-                    mask="auto",
-                    preserveAspectRatio=True
-                )
+        except:
+            pass
 
-            except Exception:
-                pass
+    # =====================================================
+    # Header
+    # =====================================================
 
-        # -------------------------------------------------
-        # Header
-        # -------------------------------------------------
+    canvas.setFillColor(BLUE)
 
-        canvas.setFont(
-            FONT_BOLD,
-            12
-        )
+    canvas.setFont(
+        FONT_BOLD,
+        11
+    )
 
-        canvas.setFillColor(
-            BLUE
-        )
+    canvas.drawString(
+        LEFT_MARGIN + 32,
+        height - 28,
+        "NEUROMATE"
+    )
 
-        canvas.drawString(
-            LEFT_MARGIN + 38,
-            height - 30,
-            "NEUROMATE"
-        )
+    # =====================================================
+    # Divider
+    # =====================================================
 
-        # -------------------------------------------------
-        # Divider
-        # -------------------------------------------------
+    canvas.setStrokeColor(SILVER)
 
-        canvas.setStrokeColor(
-            SILVER
-        )
+    canvas.setLineWidth(.4)
 
-        canvas.setLineWidth(
-            0.5
-        )
+    canvas.line(
+        LEFT_MARGIN,
+        height - 36,
+        width - RIGHT_MARGIN,
+        height - 36
+    )
 
-        canvas.line(
-            LEFT_MARGIN,
-            height - 38,
-            width - RIGHT_MARGIN,
-            height - 38
-        )
+    # =====================================================
+    # Footer
+    # =====================================================
 
-        # -------------------------------------------------
-        # Footer
-        # -------------------------------------------------
+    canvas.setFillColor(SILVER)
 
-        canvas.setFont(
-            FONT_REGULAR,
-            9
-        )
+    canvas.setFont(
+        FONT_REGULAR,
+        9
+    )
 
-        canvas.setFillColor(
-            SILVER
-        )
+    canvas.drawRightString(
+        width - RIGHT_MARGIN,
+        20,
+        f"Page {canvas.getPageNumber()}"
+    )
 
-        canvas.drawRightString(
-            width - RIGHT_MARGIN,
-            20,
-            f"Page {canvas.getPageNumber()}"
-        )
-
-        canvas.restoreState()
+    canvas.restoreState()
 
 
     # =====================================================
     # DRAW COVER PAGE
     # =====================================================
 
-    def draw_cover(self, canvas, doc):
+   def draw_cover(self, canvas, doc):
 
-        width, height = PAGE_SIZE
+    width, height = PAGE_SIZE
 
-        canvas.saveState()
+    canvas.saveState()
 
-        bg = self.cover_path()
+    bg = self.cover_path()
 
-        if os.path.exists(bg):
+    print("=" * 50)
+    print("COVER BACKGROUND")
+    print(bg)
+    print("Exists:", os.path.exists(bg))
 
-            try:
+    if os.path.exists(bg):
 
-                canvas.drawImage(
-                    ImageReader(bg),
-                    0,
-                    0,
-                    width=width,
-                    height=height,
-                    preserveAspectRatio=False,
-                    mask="auto"
-                )
+        try:
 
-            except Exception:
-                canvas.setFillColor(
-                    HexColor("#05070A")
-                )
+            img = ImageReader(bg)
 
-                canvas.rect(
-                    0,
-                    0,
-                    width,
-                    height,
-                    fill=1,
-                    stroke=0
-                )
+            print("Image Loaded Successfully")
 
-        else:
-
-            canvas.setFillColor(
-                HexColor("#05070A")
+            canvas.drawImage(
+                img,
+                0,
+                0,
+                width=width,
+                height=height,
+                preserveAspectRatio=False,
+                mask="auto"
             )
 
+        except Exception as e:
+
+            print("IMAGE ERROR:", e)
+
+            canvas.setFillColor(HexColor("#05070A"))
             canvas.rect(
                 0,
                 0,
@@ -353,33 +338,18 @@ class NeuroMatePDF:
                 stroke=0
             )
 
-        canvas.restoreState()
-            # =====================================================
-    # SAVE PDF
-    # =====================================================
+    else:
 
-    def save(self, filename="NeuroMate.pdf"):
+        print("Background NOT FOUND")
 
-        if self.doc is None:
-            self.create_document()
-
-        output_file = os.path.join(
-            self.output_path,
-            filename
+        canvas.setFillColor(HexColor("#05070A"))
+        canvas.rect(
+            0,
+            0,
+            width,
+            height,
+            fill=1,
+            stroke=0
         )
 
-        self.doc.build(
-            self.story,
-            onFirstPage=self.draw_cover,
-            onLaterPages=self.draw_page,
-        )
-
-        if os.path.exists(output_file):
-            os.remove(output_file)
-
-        os.replace(
-            self.file_path,
-            output_file
-        )
-
-        return output_file
+    canvas.restoreState()
